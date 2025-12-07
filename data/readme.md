@@ -1,0 +1,1 @@
+When the data is 'saved back to the records', the data is saved as a JSON representation of the data structure that contains the data, as well as, perhaps, the Learned Index that is used for predicting the information.

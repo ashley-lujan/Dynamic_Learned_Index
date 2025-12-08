@@ -17,9 +17,9 @@ class Bucket:
         self.memory[self.next_index] = item
         self.next_index += 1
     
-    def retrieve_item(self, query_item):
+    def retrieve_item(self, query_item, val_extractor):
         for item in self.memory:
-            if item is not None and query_item == item:
+            if item is not None and val_extractor(item) == query_item:
                 return item
         return None
     
@@ -31,7 +31,8 @@ class Bucket:
         for item in self.memory:
             if item is None:
                 break
-            if hasher(val_extractor(item)) % (2 ** self.local_depth):
+            hash_val = hasher(val_extractor(item))
+            if hash_val & (1 << (self.local_depth - 1)):
                 other_bucket.insert(item)
             else:
                 updated_memory[i] = item
@@ -56,12 +57,11 @@ class ExtensibleHash:
         self.global_depth = init_depth
     
     def hash(self, value):
-        if value is int:
+        if value is isinstance(value, int):
             value = str(value)
         return int(hashlib.sha256(value.encode('utf-8')).hexdigest(), 16)
     
-    def get_index(self, item):
-        val = self.get_key_val(item)
+    def get_index(self, val):
         return self.hash(val) % (2 ** self.global_depth)
     
     def double_buckets(self):
@@ -88,7 +88,8 @@ class ExtensibleHash:
         :param self: Description
         :param item: Description
         '''
-        bucket_index = self.get_index(item)
+        val = self.get_key_val(item)
+        bucket_index = self.get_index(val)
         search_index, bucket = self.get_bucket(bucket_index)
         if bucket.is_full():
             if bucket.local_depth == self.global_depth:
@@ -101,6 +102,11 @@ class ExtensibleHash:
     
     def get_depth(self):
         return self.global_depth
+    
+    def get(self, key_val):
+        bucket_index = self.get_index(key_val)
+        search_index, bucket = self.get_bucket(bucket_index)
+        return bucket.retrieve_item(key_val, self.get_key_val)
     
     def __str__(self, ):
         bucket_info = ""

@@ -1,9 +1,8 @@
 import parsers
+import pandas as pd
 
 if __name__ == "__main__":
-    query = "connect table table1"
-    tn = parsers.connect(query)
-    d = 2 ** 0
-    print(d)
-    print(d % 20)
-    
+    df = pd.DataFrame({"name": [1, 2, 3], "dog": ["a", "b", "c"]})
+    print(df)
+    print(df.columns.tolist())
+    print(df.loc[0].values[1])

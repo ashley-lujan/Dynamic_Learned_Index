@@ -1,5 +1,4 @@
 import hashlib
-import random
 
 class Bucket:
     def __init__(self, init_size, local_depth):
@@ -24,7 +23,7 @@ class Bucket:
                 return item
         return None
     
-    def overflow(self):
+    def overflow(self, hasher, val_extractor):
         self.local_depth += 1
         other_bucket = Bucket(self.init_size, self.local_depth)
         updated_memory = [None] * self.init_size
@@ -32,7 +31,7 @@ class Bucket:
         for item in self.memory:
             if item is None:
                 break
-            if item % (2 ** self.local_depth):
+            if hasher(val_extractor(item)) % (2 ** self.local_depth):
                 other_bucket.insert(item)
             else:
                 updated_memory[i] = item
@@ -47,20 +46,23 @@ class Bucket:
         
 
 class ExtensibleHash:
-    def __init__(self, init_size = 10, init_depth = 0):
+    def __init__(self, get_key_val, init_size = 10, init_depth = 0):
         #TODO: do something with init depth
         #Memory is a list of lists
         self.memory = [Bucket(init_size, init_depth)]
+        self.get_key_val = get_key_val
         #represent the bucket index it a memory point should refer to
         self.references = [0]
         self.global_depth = init_depth
     
     def hash(self, value):
-        # return hashlib.sha256(value)
-        return value
+        if value is int:
+            value = str(value)
+        return int(hashlib.sha256(value.encode('utf-8')).hexdigest(), 16)
     
     def get_index(self, item):
-        return self.hash(item) % (2 ** self.global_depth)
+        val = self.get_key_val(item)
+        return self.hash(val) % (2 ** self.global_depth)
     
     def double_buckets(self):
         self.global_depth += 1
@@ -75,7 +77,7 @@ class ExtensibleHash:
     def overflow_bucket(self, bucket_index, bucket: Bucket):
         overflow_bucket_id = bucket_index + (2 ** bucket.local_depth)
         self.references[overflow_bucket_id] = overflow_bucket_id
-        overflow_bucket = bucket.overflow()
+        overflow_bucket = bucket.overflow(hasher = self.hash, val_extractor=self.get_key_val)
         self.memory[overflow_bucket_id] = overflow_bucket     
             
     
@@ -156,8 +158,3 @@ def custom_test(sequence):
         print("PASSED COSTUME TEST with input = ", sequence)
     else:
         print("FAIL: ONLY FOUND NUMBERS: ", found_items)
-if __name__ == "__main__":
-    #testing:
-    basic_test(num=170)
-    numbers = [2, 4, 1, 6, 10, 9, 7, 5, 23]
-    custom_test(numbers)

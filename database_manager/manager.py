@@ -18,6 +18,7 @@ class DataManager:
     
     #from table_name select where key = key_value
     def select(self, table_name, key_value):
+        #returns the dictionary representation of the tuple
         return None
 
     def load(self, table_name:str):

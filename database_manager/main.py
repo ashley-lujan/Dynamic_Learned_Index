@@ -4,12 +4,19 @@ import re
 from enum import Enum
 
 class Commands(Enum):
-    #create table cat columns: [name, color]
     create_table = "create table"
     insert = 'insert'
     delete = 'delete'
     select = 'select from'
     connect = 'connect'
+    
+class Examples(Enum):
+    create_table = "create table cats columns: [key, color]"
+    insert = 'insert cats (cat1, black)'
+    delete = 'delete ?'
+    select = "select from cats where key = 'cat1'"
+    connect = 'connect table cats'
+    
 
 
 if __name__ == "__main__":
@@ -17,17 +24,29 @@ if __name__ == "__main__":
     while True:
         query = input("sql>")
         if query.startswith(Commands.create_table.value):
-            table_name, column_names = parse.create_table(query)
-            db.create_table(table_name = table_name, column_names=column_names)
+            try:
+                table_name, column_names = parse.create_table(query)
+                db.create_table(table_name = table_name, column_names=column_names)
+            except:
+                print("Error parsing. I.e: ", Examples.create_table.value)
         elif query.startswith(Commands.select.value):
-            table_name, key_value = parse.select_entity(query)
-            db.select(table_name=table_name, key_value=key_value)
+            try:
+                table_name, key_value = parse.select_entity(query)
+                db.select(table_name=table_name, key_value=key_value)
+            except:
+                print("Error parsing. I.e: ", Examples.select.value)
         elif query.startswith(Commands.connect.value):
-            table_name = parse.connect(query)
-            db.connect(table_name=table_name)
+            try:
+                table_name = parse.connect(query)
+                db.connect(table_name=table_name)
+            except:
+                print("Error parsing. I.e: ", Examples.connect.value)
         elif query.startswith(Commands.insert.value):
-            table_name, entity = parse.insert(query)
-            db.insert(table_name, entity)
+            try:
+                table_name, entity = parse.insert(query)
+                db.insert(table_name, entity)
+            except:
+                print("Error parsing. I.e: ", Examples.insert.value)
             
 
             

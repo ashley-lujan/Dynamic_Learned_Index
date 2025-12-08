@@ -30,7 +30,7 @@ class DBTable:
             return tuple[i]
         
         for i in range(n):
-            row_val = df.loc[i].values #just a list of values
+            row_val = df.iloc[i].values #just a list of values
             entity = ExtensibleHash(get_key_val=get_key_val, init_size=self.hash_size, init_depth= self.init_depth)
             entity.insert_item(row_val)
             data[i] = entity
@@ -38,10 +38,30 @@ class DBTable:
         return schema, data, keys
     
     def select(self, key_val):
-        pos = self.li.lookup(key_val)
+        pos, error, _ = self.li._predict_pos_and_error(key_val)
         #todo: look around error
+        #search along the window
         data_container = self.data[pos] #Bucket
         results = data_container.get(key_val)
+        search_lim = error // 2
+        i = 1
+        while i < search_lim:
+            pos_left = pos - i
+            pos_right = pos + i
+            #search on left
+            if pos_left >= 0:
+                data_container = self.data[pos_left]
+                results = data_container.get(key_val)
+                if results is not None:
+                    return results
+            #search on right
+            if pos_right < len(self.data):
+                data_container = self.data[pos_right]
+                results = data_container.get(key_val)
+                if results is not None:
+                    return results
+            i+= 1           
+            
         return results
         
         

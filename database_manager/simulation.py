@@ -16,7 +16,7 @@ def split(dir_name, filename, initial_size):
     initial_df.to_csv(initial, index=False)
     insert = dir_name + filename + "_insert" + ".csv"
     insert_df.to_csv(insert, index=False)
-    return initial, insert
+    return (initial, initial_df), (insert, insert_df)
     
 
 if __name__ == "__main__":
@@ -26,9 +26,22 @@ if __name__ == "__main__":
     data = {"uid": [1, 2, 3, 4, 5, 6, 7, 8, 9], "name": ["a", "b", "c", "d", "e", "f", "g", "h", "j"]}
     df = pd.DataFrame(data)
     initial_size = 0.7
-    initial, insert = split(dir_name, filename, initial_size)
+    initial_pair, insert_pair = split(dir_name, filename, initial_size)
+    initial_fn, initial_df = initial_pair
+    insert_fn, insert_df = insert_pair
+    sort_key = 'sid'
+    table = DBTable(file_name=initial_fn, index_levels=[1, 2, 4], sort_key=sort_key, init_depth=0, hash_size=5)
     
-    table = DBTable(file_name=initial, sort_key='sid', init_depth=0, hash_size=5)
+    #testing selection:
+    accuracy = 0
+    n = len(initial_fn)
+    for i in range(n):
+        row = initial_df.iloc[i]
+        result = table.select(row[sort_key])
+        if result is not None:
+            accuracy += 1
+    print("Able to find : ", (accuracy/n))
+    
     #todo: insert
     
     

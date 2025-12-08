@@ -66,7 +66,6 @@ class ExtensibleHash:
         self.global_depth += 1
         self.memory += ([None] * len(self.memory))
         self.references += [i for i in range(len(self.references))]
-        print('duplicate myself', self)
     
     def get_bucket(self, index):
         while self.references[index] != index:
@@ -92,7 +91,8 @@ class ExtensibleHash:
         if bucket.is_full():
             if bucket.local_depth == self.global_depth:
                 self.double_buckets()
-            self.overflow_bucket(search_index, bucket)
+            else:
+                self.overflow_bucket(search_index, bucket) #this shouldn't be here quite yet?
             self.insert_item(item) #keeps doubling as long as space is required
         else:
             bucket.insert(item)    
@@ -103,15 +103,61 @@ class ExtensibleHash:
     def __str__(self, ):
         bucket_info = ""
         for i, bucket in enumerate(self.memory):
-            if bucket is None:
-                break
-            bucket_info += "\n {}: {} \n".format(i, bucket)
+            bucket_info += "\n {}: {}".format(i, bucket)
         return "Global Depth: {}\n References: {}".format(self.global_depth, self.references) +  "Buckets: {}".format(bucket_info)
+
+def basic_test(num = 10):
+    hash_ds = ExtensibleHash(init_size = 2)
+    for i in range(num):
+        # print('insert({})------------'.format(i))
+        hash_ds.insert_item(i)
+        found_items = set()
+        for bucket_i, buckets in enumerate(hash_ds.memory):
+            if buckets is None:
+                continue
+            atNone = False
+            for i, bucket_item in enumerate(buckets.memory):
+                if bucket_item is None:
+                    atNone = True
+                elif atNone:
+                    print("added a value after a None?? at bucket: {}".format(bucket_item))
+                    print(hash_ds)
+                    raise Exception('test error')
+                elif bucket_item in found_items:
+                    print("Found duplicate item in non duplicate test at bucket i: ", bucket_item) 
+                    raise Exception('test error')
+                else:
+                    found_items.add(bucket_item)
+    print("PASSED BASIC TEST with Num = ", num)
     
+def custom_test(sequence):
+    hash_ds = ExtensibleHash(init_size = 2)
+    for i in sequence:
+        # print('insert({})------------'.format(i))
+        hash_ds.insert_item(i)
+        found_items = set()
+        for bucket_i, buckets in enumerate(hash_ds.memory):
+            if buckets is None:
+                continue
+            atNone = False
+            for i, bucket_item in enumerate(buckets.memory):
+                if bucket_item is None:
+                    atNone = True
+                elif atNone:
+                    print("added a value after a None?? at bucket: {}".format(bucket_item))
+                    print(hash_ds)
+                    raise Exception('test error')
+                elif bucket_item in found_items:
+                    print("Found duplicate item in non duplicate test at bucket i: ", bucket_item) 
+                    raise Exception('test error')
+                else:
+                    found_items.add(bucket_item)
+    if len(found_items) == len(sequence):
+        print("PASSED COSTUME TEST with input = ", sequence)
+    else:
+        print("FAIL: ONLY FOUND NUMBERS: ", found_items)
 if __name__ == "__main__":
     #testing:
-    hash_ds = ExtensibleHash(init_size = 2)
-    for i in range(10):
-        print('insert({})------------'.format(i))
-        hash_ds.insert_item(i)
-        print(hash_ds)
+    basic_test(num=170)
+    numbers = [2, 4, 1, 6, 10, 9, 7, 5, 23]
+    custom_test(numbers)

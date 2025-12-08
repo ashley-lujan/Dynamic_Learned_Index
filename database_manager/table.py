@@ -76,6 +76,7 @@ class DBTable:
         pos = max(0, pos)
         data_container = self.data[pos]
         data_container.insert_item(row.values)
+            
         
         
         

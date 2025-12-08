@@ -9,13 +9,15 @@ class Commands(Enum):
     delete = 'delete'
     select = 'select from'
     connect = 'connect'
+    load_table = "load table"
     
 class Examples(Enum):
     create_table = "create table cats columns: [key, color]"
     insert = 'insert cats (cat1, black)'
     delete = 'delete ?'
-    select = "select from cats where key = 'cat1'"
+    select = "select from cats where sid = 'cat1'"
     connect = 'connect table cats'
+    load_table = "load table sailors key = 'sid'"
     
 
 
@@ -30,11 +32,12 @@ if __name__ == "__main__":
             except:
                 print("Error parsing. I.e: ", Examples.create_table.value)
         elif query.startswith(Commands.select.value):
-            try:
+            # try:
                 table_name, key_value = parse.select_entity(query)
+                key_value = int(key_value)
                 db.select(table_name=table_name, key_value=key_value)
-            except:
-                print("Error parsing. I.e: ", Examples.select.value)
+            # except:
+            #     print("Error parsing. I.e: ", Examples.select.value)
         elif query.startswith(Commands.connect.value):
             try:
                 table_name = parse.connect(query)
@@ -42,11 +45,20 @@ if __name__ == "__main__":
             except:
                 print("Error parsing. I.e: ", Examples.connect.value)
         elif query.startswith(Commands.insert.value):
-            try:
+            # try:
                 table_name, entity = parse.insert(query)
                 db.insert(table_name, entity)
+            # except:
+            #     print("Error parsing. I.e: ", Examples.insert.value)
+        elif query.startswith(Commands.load_table.value):
+            try:
+                table_name, key_name = parse.load_table(query)
+                db.load_table(table_name, key_name)
             except:
-                print("Error parsing. I.e: ", Examples.insert.value)
+                print("Error parsing. I.e : ", Examples.load_table.value)
+        else:
+            print("Invalid command")
+            
             
 
             

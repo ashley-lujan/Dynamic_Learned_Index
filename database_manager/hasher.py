@@ -56,6 +56,8 @@ class ExtensibleHash:
         #represent the bucket index it a memory point should refer to
         self.references = [0]
         self.global_depth = init_depth
+        self.min = None
+        self.max = None
             
     def normalize_for_hash(self, value):
         if isinstance(value, (np.generic,)):  
@@ -117,6 +119,7 @@ class ExtensibleHash:
                 self.overflow_bucket(search_index, bucket) #this shouldn't be here quite yet?
             self.insert_item(item) #keeps doubling as long as space is required
         else:
+            #update self.values
             bucket.insert(item)    
     
     def get_depth(self):

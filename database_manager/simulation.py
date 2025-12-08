@@ -19,6 +19,18 @@ def split(dir_name, filename, initial_size):
     return (initial, initial_df), (insert, insert_df)
     
 
+
+def test_accuracy(initial_df, sort_key, table):
+    accuracy = 0
+    n = len(initial_df)
+    print('n = ', n)
+    for i in range(n):
+        row = initial_df.iloc[i]
+        result = table.select(row[sort_key])
+        if result is not None:
+            accuracy += 1
+    return accuracy / n
+
 if __name__ == "__main__":
     dir_name = 'data/original_csv/'
     filename = 'sailors'
@@ -33,18 +45,18 @@ if __name__ == "__main__":
     table = DBTable(file_name=initial_fn, index_levels=[1, 2, 4], sort_key=sort_key, init_depth=0, hash_size=5)
     
     #testing selection:
-    accuracy = 0
-    n = len(initial_fn)
+    print("Testing Selection Accuracy-----")
+    accuracy = test_accuracy(initial_df, sort_key, table)
+    print("Able to find : ", (accuracy))
+    
+    #testing insertion
+    print("Testing Insertion-----")
+    #inserting
+    n = len(insert_df)
     for i in range(n):
-        row = initial_df.iloc[i]
-        result = table.select(row[sort_key])
-        if result is not None:
-            accuracy += 1
-    print("Able to find : ", (accuracy/n))
-    
-    #todo: insert
+        row = insert_df.iloc[i]
+        table.insert(row)
+    insert_accuracy = test_accuracy(insert_df, sort_key, table)
+    print('Accuracy for selection of insertion items: ', insert_accuracy)
     
     
-    
-    
-    # table = DBTable()

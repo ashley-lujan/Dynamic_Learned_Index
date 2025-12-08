@@ -40,22 +40,19 @@ class DBTable:
     def select(self, key_val):
         pos, error, _ = self.li._predict_pos_and_error(key_val)
         #todo: look around error
-        #search along the window
-        data_container = self.data[pos] #Bucket
-        results = data_container.get(key_val)
         search_lim = error // 2
-        i = 1
+        i = 0
         while i < search_lim:
             pos_left = pos - i
             pos_right = pos + i
             #search on left
-            if pos_left >= 0:
+            if pos_left >= 0 and pos_left < len(self.data):
                 data_container = self.data[pos_left]
                 results = data_container.get(key_val)
                 if results is not None:
                     return results
             #search on right
-            if pos_right < len(self.data):
+            if pos_right >= 0 and pos_right < len(self.data):
                 data_container = self.data[pos_right]
                 results = data_container.get(key_val)
                 if results is not None:
@@ -63,6 +60,25 @@ class DBTable:
             i+= 1           
             
         return results
+    
+    
+    def insert(self, row):
+        '''
+        Inserts row into table
+        :param self: Description
+        :param row: {"att1": val, "attr2": val2} of row being added to table
+        '''
+        key_val = row[self.sort_key]
+        pos, error, _ = self.li._predict_pos_and_error(key_val)
+        #TODO: ideally look within error bound to find the best match,
+        # i.e a bucket really close to pos, but that also allows the data to be 'sorted'
+        pos = min(len(self.data) - 1, pos)
+        pos = max(0, pos)
+        data_container = self.data[pos]
+        data_container.insert_item(row.values)
+        
+        
+        
         
         
         

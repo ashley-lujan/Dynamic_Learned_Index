@@ -4,18 +4,21 @@ from rmi import MultiLevelRMI
 
 
 class DBTable:
-    def __init__(self, file_name:str|None, sort_key: str, index_levels=[1, 4, 16], hash_size=10, init_depth = 0, from_data=None, depth_limit = 5):
+    def __init__(self, file_name:str|None, sort_key: str, index_levels=[1, 4, 16], hash_size=10, init_depth = 0, from_data=None, depth_limit = 5, log_modeling=False):
         self.file_name = file_name
         self.index_levels = index_levels
+        self.log_modeling = log_modeling
         self.sort_key = sort_key
         self.hash_size = hash_size
         self.init_depth = init_depth
         self.depth_limit = depth_limit
         self.schema, self.data, keys = self.load_data(file_name, from_data)
         self.li = MultiLevelRMI(levels=index_levels)
-        print('Fitting Model')
+        if self.log_modeling:
+            print('Fitting Model')
         self.li.fit(keys)
-        print('Finished fitting model')
+        if self.log_modeling:
+            print('Finished fitting model')
         
     
     def load_data(self, file_name, from_data):
@@ -59,6 +62,9 @@ class DBTable:
     def select(self, key_val):
         pos, error, _ = self.li._predict_pos_and_error(key_val)
         #todo: look around error
+        #force pos to be either 
+        pos = min(len(self.data), pos)
+        pos = max(0, pos)
         search_lim = error // 2
         i = 0
         while i <= search_lim:
@@ -126,7 +132,7 @@ def test_table_growth(accuracy_test, log=False):
         "userid": [0, 20, 40, 60]
     }
     df = pd.DataFrame(df)
-    db_table = DBTable(from_data=df, file_name=None, sort_key="userid", index_levels=[1, 2, 4], hash_size=2, depth_limit=2)
+    db_table = DBTable(from_data=df, file_name=None, sort_key="userid", index_levels=[1, 2, 4], hash_size=2, depth_limit=2, log_modeling=log)
     accuracy = accuracy_test(tb = db_table, sequence=df["userid"])
     print('Pre-accuracy: ', accuracy)
     test_numbers = []

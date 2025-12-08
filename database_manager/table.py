@@ -4,21 +4,28 @@ from rmi import MultiLevelRMI
 
 
 class DBTable:
-    def __init__(self, file_name:str, sort_key: str, index_levels=[1, 4, 16], hash_size=10, init_depth = 0):
+    def __init__(self, file_name:str|None, sort_key: str, index_levels=[1, 4, 16], hash_size=10, init_depth = 0, from_data=None, depth_limit = 5):
         self.file_name = file_name
+        self.index_levels = index_levels
         self.sort_key = sort_key
         self.hash_size = hash_size
         self.init_depth = init_depth
-        self.schema, self.data, keys = self.load_data()
+        self.depth_limit = depth_limit
+        self.schema, self.data, keys = self.load_data(file_name, from_data)
         self.li = MultiLevelRMI(levels=index_levels)
         print('Fitting Model')
         self.li.fit(keys)
         print('Finished fitting model')
         
     
-    def load_data(self):
+    def load_data(self, file_name, from_data):
         #returns data
-        df = pd.read_csv(self.file_name)
+        if file_name is None:
+            if from_data is None:
+                raise Exception("Can not construct a table with nothing!")
+            df = from_data
+        else:
+            df = pd.read_csv(self.file_name)
         n = len(df)
         data = [None] * n
         keys = [None] * n
@@ -37,29 +44,51 @@ class DBTable:
             keys[i] = get_key_val(row_val)
         return schema, data, keys
     
+    def flatten_entity(self, i):
+        #convert ith position to another table
+        hash_ds = self.data[i]
+        hash_ds_data = hash_ds.get_data()
+        inner_data = {}
+        for col_i, col_name in enumerate(self.schema):
+            inner_data[col_name] = hash_ds_data[:, col_i]
+        df = pd.DataFrame(inner_data)
+        
+        inner_table = DBTable(from_data=df, file_name=None, sort_key=self.sort_key, index_levels=self.index_levels, hash_size=self.hash_size, init_depth=self.init_depth)
+        self.data[i] = inner_table
+    
     def select(self, key_val):
         pos, error, _ = self.li._predict_pos_and_error(key_val)
         #todo: look around error
         search_lim = error // 2
         i = 0
-        while i < search_lim:
+        while i <= search_lim:
             pos_left = pos - i
             pos_right = pos + i
             #search on left
             if pos_left >= 0 and pos_left < len(self.data):
                 data_container = self.data[pos_left]
-                results = data_container.get(key_val)
-                if results is not None:
-                    return results
+                if isinstance(data_container, DBTable):
+                    results = data_container.select(key_val)
+                    if results is not None:
+                        return results
+                else:
+                    results = data_container.get(key_val)
+                    if results is not None:
+                        return results
             #search on right
             if pos_right >= 0 and pos_right < len(self.data):
                 data_container = self.data[pos_right]
-                results = data_container.get(key_val)
-                if results is not None:
-                    return results
+                if isinstance(data_container, DBTable):
+                    results = data_container.select(key_val)
+                    if results is not None:
+                        return results
+                else:
+                    results = data_container.get(key_val)
+                    if results is not None:
+                        return results
             i+= 1           
             
-        return results
+        return None
     
     
     def insert(self, row):
@@ -75,9 +104,45 @@ class DBTable:
         pos = min(len(self.data) - 1, pos)
         pos = max(0, pos)
         data_container = self.data[pos]
-        data_container.insert_item(row.values)
+        if isinstance(data_container, DBTable):
+            data_container.insert(row)
+        else:
+            data_container.insert_item(row.values)
+            if data_container.global_depth > self.depth_limit:
+                self.flatten_entity(pos)
+    
+    def __str__(self,):
+        #prints tree representation of itself:
+        representation = ""
+        for data_container in self.data:
+            representation += "\n\t" + str(data_container)
+        return representation
+        
             
         
+#testing dynamicness
+def test_table_growth(accuracy_test, log=False):
+    df = {
+        "userid": [0, 20, 40, 60]
+    }
+    df = pd.DataFrame(df)
+    db_table = DBTable(from_data=df, file_name=None, sort_key="userid", index_levels=[1, 2, 4], hash_size=2, depth_limit=2)
+    accuracy = accuracy_test(tb = db_table, sequence=df["userid"])
+    print('Pre-accuracy: ', accuracy)
+    test_numbers = []
+    for i in df['userid']:
+        test_numbers += [j for j in range(i + 1, i + 20)]
+    print('test numbers became: ', test_numbers)
+    test_df = pd.DataFrame({"userid": test_numbers})
+    for i in range(len(test_numbers)):
+        row = test_df.iloc[i]
+        db_table.insert(row)
+    fin_acc = accuracy_test(tb = db_table, sequence=[i for i in range(60)])
+    print('Final-accuracy', fin_acc)
+    if log:
+        print(db_table)
+    #then check accuracy when it comes to selecting all the numbers
+    
         
         
         

@@ -5,6 +5,7 @@ from enum import Enum
 
 class Commands(Enum):
     create_table = "create table"
+    show_table = "show table"
     insert = 'insert'
     delete = 'delete'
     select = 'select from'
@@ -18,6 +19,7 @@ class Examples(Enum):
     select = "select from cats where sid = 'cat1'"
     connect = 'connect table cats'
     load_table = "load table sailors key = 'sid'"
+    show_table = "show table sailors"
     
 
 
@@ -56,6 +58,13 @@ if __name__ == "__main__":
                 db.load_table(table_name, key_name)
             except:
                 print("Error parsing. I.e : ", Examples.load_table.value)
+        elif query.startswith(Commands.show_table.value):
+            try:
+                table_name = parse.show_table(query)
+                schema = db.get_schema(table_name=table_name)
+                print("For table:", table_name, ", schema:", schema)
+            except:
+                print("Error parsing. I.e: ", Examples.show_table.value)
         else:
             print("Invalid command")
             

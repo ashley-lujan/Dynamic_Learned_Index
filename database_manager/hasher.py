@@ -48,7 +48,7 @@ class Bucket:
         
 
 class ExtensibleHash:
-    def __init__(self, get_key_val, init_size = 10, init_depth = 0):
+    def __init__(self, get_key_val,init_size = 10, init_depth = 0):
         #TODO: do something with init depth
         #Memory is a list of lists
         self.memory = [Bucket(init_size, init_depth)]
@@ -135,6 +135,14 @@ class ExtensibleHash:
         for i, bucket in enumerate(self.memory):
             bucket_info += "\n {}: {}".format(i, bucket)
         return "Global Depth: {}\n References: {}".format(self.global_depth, self.references) +  "Buckets: {}".format(bucket_info)
+    
+    def get_data(self):
+        data = []
+        for bucket in self.memory:
+            if bucket is not None:
+                data += bucket.memory[0: bucket.next_index]
+        return np.asarray(data)
+                
 
 def basic_test(num = 10):
     hash_ds = ExtensibleHash(init_size = 2)

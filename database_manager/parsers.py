@@ -22,6 +22,18 @@ def load_table(query):
         raise ValueError("String format not recognized")
     return table_name, key_name
 
+def show_table(query):
+    match = re.match(
+        r"^\s*show table\s+([A-Za-z_][A-Za-z0-9_]*)\s*",
+        query
+    )
+
+    if match:
+        table_name = match.group(1)
+    else:
+        raise ValueError("String format not recognized")
+    return table_name
+
 def select_entity(query):
     pattern = r"select from\s+([A-Za-z_][A-Za-z0-9_]*)\s+where\s+key\s*=\s*'([A-Za-z0-9_]+)'"
     match = re.search(pattern, query)

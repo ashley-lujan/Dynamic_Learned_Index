@@ -4,14 +4,16 @@ from table import DBTable
 #The idea is that the DataManager holds the items in memory.
 class DataManager:
     def __init__(self):
-        self.tables = {} #list of tables, tables are dictionaries
+        self.tables = {} #tableName: DbTable
     
     # self __init__():
     def create_table(self, table_name, column_names: list):
         print(table_name, column_names)
     
     def get_schema(self, table_name):
-        return self.tables[table_name]
+        if table_name not in self.tables:
+            return []
+        return self.tables[table_name].schema
     
     def insert(self, table_name: str, entity: tuple):
         db_table = self.tables[table_name]

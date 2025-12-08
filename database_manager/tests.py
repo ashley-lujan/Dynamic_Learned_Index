@@ -1,6 +1,7 @@
 import pandas as pd
 from hasher import ExtensibleHash
 import numpy as np
+import table
 
 def test_hasher_with_tuples(log=False):
     df = pd.DataFrame(
@@ -38,8 +39,21 @@ def test_hasher_with_tuples_extraction(log=False):
             print('for name = {}, result is: {}'.format(name, result))
         assert result is not None
         assert result[0].item() == i
+ 
+def accuracy(tb: table.DBTable, sequence=list):
+    accuracy = 0
+    n = len(sequence)
+    for num in sequence:
+        result = tb.select(num)
+        if result is not None:
+            accuracy += 1
+    return accuracy/n
+        
+            
+        
         
 if __name__ == "__main__":
     print('IN TESTS')
-    test_hasher_with_tuples()
-    test_hasher_with_tuples_extraction()
+    # test_hasher_with_tuples()
+    # test_hasher_with_tuples_extraction()
+    table.test_table_growth(accuracy_test=accuracy, log=False)

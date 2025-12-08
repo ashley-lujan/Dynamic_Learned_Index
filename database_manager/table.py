@@ -6,10 +6,10 @@ from rmi import MultiLevelRMI
 class DBTable:
     def __init__(self, file_name:str, sort_key: str, index_levels=[1, 4, 16], hash_size=10, init_depth = 0):
         self.file_name = file_name
-        self.schema, self.data, keys = self.load_data()
         self.sort_key = sort_key
         self.hash_size = hash_size
         self.init_depth = init_depth
+        self.schema, self.data, keys = self.load_data()
         self.li = MultiLevelRMI(levels=index_levels)
         print('Fitting Model')
         self.li.fit(keys)
@@ -31,7 +31,7 @@ class DBTable:
         
         for i in range(n):
             row_val = df.loc[i].values #just a list of values
-            entity = ExtensibleHash(self.hash_size, self.init_depth, get_key_val)
+            entity = ExtensibleHash(get_key_val=get_key_val, init_size=self.hash_size, init_depth= self.init_depth)
             entity.insert_item(row_val)
             data[i] = entity
             keys[i] = get_key_val(row_val)
@@ -41,7 +41,7 @@ class DBTable:
         pos = self.li.lookup(key_val)
         #todo: look around error
         data_container = self.data[pos] #Bucket
-        results = data_container.get(pos)
+        results = data_container.get(key_val)
         return results
         
         

@@ -1,4 +1,5 @@
 import hashlib
+import numpy as np
 
 class Bucket:
     def __init__(self, init_size, local_depth):
@@ -55,10 +56,28 @@ class ExtensibleHash:
         #represent the bucket index it a memory point should refer to
         self.references = [0]
         self.global_depth = init_depth
+            
+    def normalize_for_hash(self, value):
+        if isinstance(value, (np.generic,)):  
+            value = value.item()
+
+        # Convert Python native types to string
+        if isinstance(value, (int, float, str)):
+            return str(value)
+
+        if isinstance(value, bytes):
+            try:
+                return value.decode('utf-8')
+            except UnicodeDecodeError:
+                return value.hex()
+
+        if value is None:
+            return "None"
+        return str(value)
+
     
     def hash(self, value):
-        if value is isinstance(value, int):
-            value = str(value)
+        value = self.normalize_for_hash(value)
         return int(hashlib.sha256(value.encode('utf-8')).hexdigest(), 16)
     
     def get_index(self, val):

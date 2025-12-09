@@ -1,6 +1,5 @@
 from manager import DataManager
 import parsers as parse
-import re
 from enum import Enum
 
 class Commands(Enum):
@@ -18,7 +17,7 @@ class Examples(Enum):
     delete = 'delete ?'
     select = "select from cats where sid = 'cat1'"
     connect = 'connect table cats'
-    load_table = "load table sailors key = 'sid'"
+    load_table = "load table sailors key = 'sid' depth_limit = 5"
     show_table = "show table sailors"
     
 
@@ -54,8 +53,8 @@ if __name__ == "__main__":
             #     print("Error parsing. I.e: ", Examples.insert.value)
         elif query.startswith(Commands.load_table.value):
             try:
-                table_name, key_name = parse.load_table(query)
-                db.load_table(table_name, key_name)
+                table_name, key_name, limit = parse.load_table(query)
+                db.load_table(table_name, key_name, int(limit))
             except:
                 print("Error parsing. I.e : ", Examples.load_table.value)
         elif query.startswith(Commands.show_table.value):

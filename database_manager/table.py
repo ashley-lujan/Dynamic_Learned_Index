@@ -114,7 +114,8 @@ class DBTable:
             data_container.insert(row)
         else:
             data_container.insert_item(row.values)
-            if data_container.global_depth > self.depth_limit:
+            #triggers regrowth
+            if self.depth_limit is not None and data_container.global_depth > self.depth_limit:
                 self.flatten_entity(pos)
     
     def __str__(self,):

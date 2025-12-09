@@ -29,7 +29,7 @@ def test_accuracy(initial_df, sort_key, table):
         result = table.select(row[sort_key])
         if result is not None:
             accuracy += 1
-    return accuracy / n
+    return accuracy
 
 if __name__ == "__main__":
     dir_name = 'data/original_csv/'

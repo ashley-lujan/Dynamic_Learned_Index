@@ -10,17 +10,27 @@ def create_table(query):
     return table_name, columns
 
 def load_table(query):
+    pattern = r"^\s*load table\s+([A-Za-z_][A-Za-z0-9_]*)\s+key\s*=\s*'([A-Za-z_][A-Za-z0-9_]*)'(?:\s+depth_limit=(\w+))?\s*$"
     match = re.match(
-        r"^\s*load table\s+([A-Za-z_][A-Za-z0-9_]*)\s+key\s*=\s*'([A-Za-z_][A-Za-z0-9_]*)'\s*",
+        pattern,
         query
     )
 
     if match:
         table_name = match.group(1)
         key_name = match.group(2)
+        depth_raw = match.group(3)
+        if depth_raw is None:
+            depth_limit = None
+        elif depth_raw.isdigit():
+            depth_limit = int(depth_raw)
+        elif depth_raw == "None":
+            depth_limit = None
+        else:
+            raise ValueError(f"Unexpected depth_limit value: {depth_raw}")
     else:
         raise ValueError("String format not recognized")
-    return table_name, key_name
+    return table_name, key_name, depth_limit
 
 def show_table(query):
     match = re.match(

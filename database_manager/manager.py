@@ -8,7 +8,7 @@ class DataManager:
     
     # self __init__():
     def create_table(self, table_name, column_names: list):
-        print(table_name, column_names)
+        print("Did not create table. Unimplemented feature for blank table.")
     
     def get_schema(self, table_name):
         if table_name not in self.tables:
@@ -34,11 +34,11 @@ class DataManager:
         result = db_table.select(key_value)
         print('Result: ', result)
 
-    def load_table(self, table_name:str, key_name):
+    def load_table(self, table_name:str, key_name, limit):
         #read file name and save as hash indexes
-        db_table = DBTable(file_name="data/original_csv/" +table_name + ".csv", sort_key=key_name, index_levels=[1, 4, 6], hash_size=10, init_depth=0)
+        db_table = DBTable(file_name="data/original_csv/" +table_name + ".csv", sort_key=key_name, index_levels=[1, 4, 6], hash_size=10, init_depth=0, depth_limit=limit)
         self.tables[table_name] = db_table
-        print("Created table,", table_name ,"with schema: ", db_table.schema)
+        print("Created table,", table_name ,"with schema: ", db_table.schema, "with depth limit: ", limit)
     
     def connect(self, table_name:str):
         pass

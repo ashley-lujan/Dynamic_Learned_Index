@@ -24,10 +24,10 @@ class Examples(Enum):
 
 
 if __name__ == "__main__":
-    print("ELHI Initialized")
+    print("EHLI Initialized")
     db = DataManager()
     while True:
-        query = input("elhi>")
+        query = input("EHLI>")
         if query.startswith(Commands.create_table.value):
             try:
                 table_name, column_names = parse.create_table(query)

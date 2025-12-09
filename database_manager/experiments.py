@@ -20,14 +20,63 @@ def plot(x, ys, labels, saveas, x_label, y_label, title):
     plt.savefig(saveas)
     plt.show()
 
-
-
-def test_sizes(sizes, dir, filename: str, min_insertion_size = 1000):
+def test_insertion_sizes(sizes, dir, filename: str, min_insertion_size = 1000):
     df = pd.read_csv(dir + filename + '.csv')
     df = df.sample(frac=1)
     hash_size = 10
+    title = "Analysis Of Total Insertion Time for Varying Size of Insertion Among Varying Size of Global Depth onto  {} Initial Sized Table".format(min_insertion_size)
+    title2 = "Analysis Of Select Each Item After Varying Size of Insertion Among Varying Size of Global Depth onto {} Initial Sized Table".format(min_insertion_size)
+
+        
+    #last 1000 are insertion
+    n = len(df)
+    select_times = []
     
-    title = "Analysis Of Insertion onto Varying Initial Sized Table"
+    global_limit = [2, 5, 10, 20, 50]
+    exp_times = []
+    for limit in global_limit:
+        insertion_times = []
+        sel_ti = []
+        for size in sizes:
+            initial_df = df.iloc[n - min_insertion_size:]
+            insert_n = int(math.ceil(n - min_insertion_size) * size)
+            insert_df = df.iloc[0:insert_n]
+        
+            #evaluating start up time
+            start = time.time()
+            db_table = DBTable(file_name=None, from_data=initial_df, sort_key='sid', index_levels=[1, 4, 8], hash_size=hash_size, depth_limit=limit)
+            end = time.time()
+            #evaluation insertion time
+            start = time.time()
+            test_n = len(insert_df)
+            for i in range(test_n):
+                row = insert_df.iloc[i]
+                db_table.insert(row)
+            end = time.time()
+            insertion_times.append(end - start)
+            #evaluation accuracy
+            start = time.time()
+            test_accuracy(initial_df=initial_df, sort_key='sid', table = db_table)
+            test_accuracy(initial_df=insert_df, sort_key='sid', table = db_table)
+            end = time.time()
+            sel_ti.append(end - start)
+        exp_times.append(insertion_times)
+        select_times.append(sel_ti)
+    plot(sizes, exp_times, global_limit, x_label="sizes", y_label="RunTime for Global Depth", title=title, saveas='results/sizes_insertion_runtime.png')
+    plot(sizes, select_times, global_limit, x_label="sizes", y_label="RunTime for Global Depth", title=title2, saveas='results/sizes_select_all_runtime.png')
+    
+
+
+
+def test_sizes(sizes, dir, filename: str, min_insertion_size = 1000, swap=False):
+    df = pd.read_csv(dir + filename + '.csv')
+    df = df.sample(frac=1)
+    hash_size = 10
+    if swap:
+        title = "Analysis Of Varying Size of Insertion onto  {} Initial Sized Table".format(min_insertion_size)
+    else:
+        title = "Analysis Of Insertion onto Varying Initial Sized Table"
+        
     #last 1000 are insertion
     n = len(df)
     initialization_times = []
@@ -35,9 +84,14 @@ def test_sizes(sizes, dir, filename: str, min_insertion_size = 1000):
     init_accuracy = []
     insert_accuracy = []
     for size in sizes:
-        insert_df = df.iloc[n - min_insertion_size:]
-        initial_n = int(math.ceil(n - min_insertion_size) * size)
-        initial_df = df.iloc[0:initial_n]
+        if swap:
+            initial_df = df.iloc[n - min_insertion_size:]
+            insert_n = int(math.ceil(n - min_insertion_size) * size)
+            insert_df = df.iloc[0:insert_n]
+        else:
+            insert_df = df.iloc[n - min_insertion_size:]
+            initial_n = int(math.ceil(n - min_insertion_size) * size)
+            initial_df = df.iloc[0:initial_n]
         #evaluating start up time
         start = time.time()
         db_table = DBTable(file_name=None, from_data=initial_df, sort_key='sid', index_levels=[1, 4, 8], hash_size=hash_size)
@@ -57,8 +111,12 @@ def test_sizes(sizes, dir, filename: str, min_insertion_size = 1000):
         accessible = test_accuracy(initial_df=insert_df, sort_key='sid', table = db_table)
         insert_accuracy.append(accessible/(len(insert_df)))
     print(initialization_times, insertion_times, init_accuracy, insert_accuracy)
-    plot(sizes, [initialization_times, insertion_times], ["Initialization", "Insertion"], x_label="sizes", y_label="RunTime", title=title, saveas='results/sizes_runtime.png')
-    plot(sizes, [init_accuracy, insert_accuracy], ["Initial Data", "Inserted Data"], x_label="sizes", y_label="% of Time", title="Ability to Access Final Data Within Error Bounds", saveas='results/sizes_accuracies.png')
+    if swap:
+        plot(sizes, [initialization_times, insertion_times], ["Initialization", "Insertion"], x_label="sizes", y_label="RunTime", title=title, saveas='results/sizes_insertion_runtime.png')
+        plot(sizes, [init_accuracy, insert_accuracy], ["Initial Data", "Inserted Data"], x_label="sizes", y_label="% of Time", title="Ability to Access Final Data Within Error Bounds After Increasing Num of Insertion Operations", saveas='results/sizes_insertion_accuracies.png')
+    else:
+        plot(sizes, [initialization_times, insertion_times], ["Initialization", "Insertion"], x_label="sizes", y_label="RunTime", title=title, saveas='results/sizes_runtime.png')
+        plot(sizes, [init_accuracy, insert_accuracy], ["Initial Data", "Inserted Data"], x_label="sizes", y_label="% of Time", title="Ability to Access Final Data Within Error Bounds", saveas='results/sizes_accuracies.png')
     
 def test_depths(depths, dir, filename: str, min_insertion_size = 1000):
     df = pd.read_csv(dir + filename + '.csv')
@@ -462,6 +520,12 @@ if __name__ == '__main__':
     
     #test between non uniform and uniform
     #test size of insertion
-    skews = [0.5, 1.0, 1.5, 2.0]
-    results = test_skewed_insertion(skews)
-    print(results)
+    # skews = [0.5, 1.0, 1.5, 2.0]
+    # results = test_skewed_insertion(skews)
+    # print(results)
+    
+    #test runtime with smaller sizes of initial data and insert data, as well as timing
+    sizes = [.10, .20, .40, .80, 1]
+    test_insertion_sizes(sizes=sizes, dir=dir, filename=filename)
+    
+    

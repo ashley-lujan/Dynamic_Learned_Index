@@ -10,6 +10,7 @@ class Commands(Enum):
     select = 'select from'
     connect = 'connect'
     load_table = "load table"
+    quit = 'quit'
     
 class Examples(Enum):
     create_table = "create table cats columns: [key, color]"
@@ -17,15 +18,16 @@ class Examples(Enum):
     delete = 'delete ?'
     select = "select from cats where sid = 'cat1'"
     connect = 'connect table cats'
-    load_table = "load table sailors key = 'sid' depth_limit = 5"
+    load_table = "load table sailors key = 'sid' depth_limit=5"
     show_table = "show table sailors"
     
 
 
 if __name__ == "__main__":
+    print("ELHI Initialized")
     db = DataManager()
     while True:
-        query = input("sql>")
+        query = input("elhi>")
         if query.startswith(Commands.create_table.value):
             try:
                 table_name, column_names = parse.create_table(query)
@@ -52,11 +54,11 @@ if __name__ == "__main__":
             # except:
             #     print("Error parsing. I.e: ", Examples.insert.value)
         elif query.startswith(Commands.load_table.value):
-            try:
+            # try:
                 table_name, key_name, limit = parse.load_table(query)
-                db.load_table(table_name, key_name, int(limit))
-            except:
-                print("Error parsing. I.e : ", Examples.load_table.value)
+                db.load_table(table_name, key_name, limit)
+            # except:
+            #     print("Error parsing. I.e : ", Examples.load_table.value)
         elif query.startswith(Commands.show_table.value):
             try:
                 table_name = parse.show_table(query)
@@ -64,6 +66,9 @@ if __name__ == "__main__":
                 print("For table:", table_name, ", schema:", schema)
             except:
                 print("Error parsing. I.e: ", Examples.show_table.value)
+        elif query.startswith(Commands.quit.value):
+            print("Goodbye!")
+            break
         else:
             print("Invalid command")
             
